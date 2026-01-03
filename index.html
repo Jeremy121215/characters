@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>特殊字符大全 | 复制各种符号</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🔣</text></svg>">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-font"></i> 特殊字符大全</h1>
+            <p class="subtitle">轻松查找和复制各种难以输入的字符、符号和表情</p>
+        </header>
+
+        <div class="search-container">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="搜索字符或名称...">
+                <button id="clearSearch" class="clear-btn" title="清除搜索">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="search-options">
+                <div class="search-mode">
+                    <label class="radio-label">
+                        <input type="radio" name="searchMode" value="all" checked>
+                        <span>在所有分类中搜索</span>
+                    </label>
+                    <label class="radio-label">
+                        <input type="radio" name="searchMode" value="category">
+                        <span>在当前分类中搜索</span>
+                    </label>
+                </div>
+                
+                <div class="search-stats">
+                    <span id="symbolCount">0</span> 个字符
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <aside class="sidebar">
+                <div class="category-list">
+                    <h3><i class="fas fa-list"></i> 分类</h3>
+                    <ul id="categoryList">
+                        <!-- 分类将通过JavaScript动态生成 -->
+                    </ul>
+                </div>
+                
+                <div class="quick-links">
+                    <h3><i class="fas fa-bolt"></i> 快速链接</h3>
+                    <div class="quick-buttons">
+                        <button class="quick-btn" data-category="数学">
+                            <i class="fas fa-calculator"></i> 数学符号
+                        </button>
+                        <button class="quick-btn" data-category="希腊字母">
+                            <i class="fas fa-gem"></i> 希腊字母
+                        </button>
+                        <button class="quick-btn" data-category="emoji">
+                            <i class="fas fa-smile"></i> Emoji表情
+                        </button>
+                        <button class="quick-btn" data-category="音标">
+                            <i class="fas fa-language"></i> 音标符号
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="instructions">
+                    <h3><i class="fas fa-info-circle"></i> 使用说明</h3>
+                    <ul>
+                        <li>点击字符卡片上的"复制"按钮复制字符</li>
+                        <li>使用搜索框查找特定字符</li>
+                        <li>点击左侧分类筛选字符</li>
+                        <li>双击字符卡片可直接复制字符</li>
+                    </ul>
+                </div>
+            </aside>
+
+            <main class="symbols-grid">
+                <div class="category-header">
+                    <h2 id="currentCategory">所有字符</h2>
+                    <div class="category-info">
+                        <span id="categoryCount">0</span> 个字符
+                    </div>
+                </div>
+                
+                <div id="symbolsContainer" class="symbols-container">
+                    <!-- 字符卡片将通过JavaScript动态生成 -->
+                </div>
+                
+                <div id="noResults" class="no-results">
+                    <i class="fas fa-search"></i>
+                    <h3>未找到匹配的字符</h3>
+                    <p>尝试使用不同的关键词或切换分类</p>
+                </div>
+            </main>
+        </div>
+        
+        <div class="notification" id="notification">
+            <i class="fas fa-check-circle"></i>
+            <span>字符已复制到剪贴板！</span>
+        </div>
+        
+        <footer>
+            <p>© 2023 特殊字符大全 | 设计用于学术和日常使用</p>
+            <p class="footer-links">
+                <a href="javascript:void(0)" id="showAbout">关于本站</a> | 
+                <a href="javascript:void(0)" id="showFeedback">反馈建议</a> | 
+                <a href="javascript:void(0)" id="toggleDarkMode">切换深色模式</a>
+            </p>
+        </footer>
+    </div>
+
+    <!-- 关于模态框 -->
+    <div id="aboutModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>关于特殊字符大全</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>这个网站收集了各种难以输入的特殊字符、符号和表情，方便用户快速查找和复制使用。</p>
+                <p>包含的字符类型：</p>
+                <ul>
+                    <li>数学符号（算术、代数、几何、集合论、逻辑等）</li>
+                    <li>希腊字母（大小写）</li>
+                    <li>音标符号（国际音标）</li>
+                    <li>拼音与注音符号</li>
+                    <li>箭头符号</li>
+                    <li>Emoji表情</li>
+                    <li>货币符号</li>
+                    <li>特殊标点</li>
+                    <li>以及其他各种实用符号</li>
+                </ul>
+                <p>所有字符均支持一键复制，方便在文档、聊天、代码等场景中使用。</p>
+            </div>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
