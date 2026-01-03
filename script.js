@@ -1,5 +1,4 @@
 // 特殊字符网站主脚本 - 修复版
-// 数据源：chars.json
 
 // 全局变量
 let allSymbols = [];
@@ -8,28 +7,18 @@ let searchMode = 'all';
 let searchQuery = '';
 let categories = [];
 
-// DOM 元素变量
-let symbolsContainer, categoryList, searchInput, clearSearchBtn;
-let currentCategoryElement, categoryCountElement, symbolCountElement;
-let noResultsElement, notification;
+// 等待 DOM 完全加载
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM 已加载，开始初始化...');
+    initApp();
+});
 
-// 初始化函数 - 修改为立即执行
-(function init() {
-    console.log('网站开始初始化...');
+// 应用程序初始化
+function initApp() {
+    console.log('初始化应用程序...');
     
-    // 获取 DOM 元素
-    symbolsContainer = document.getElementById('symbolsContainer');
-    categoryList = document.getElementById('categoryList');
-    searchInput = document.getElementById('searchInput');
-    clearSearchBtn = document.getElementById('clearSearch');
-    currentCategoryElement = document.getElementById('currentCategory');
-    categoryCountElement = document.getElementById('categoryCount');
-    symbolCountElement = document.getElementById('symbolCount');
-    noResultsElement = document.getElementById('noResults');
-    notification = document.getElementById('notification');
-    
-    // 设置初始数据
-    setupInitialData();
+    // 立即加载默认数据
+    loadDefaultData();
     
     // 设置事件监听器
     setupEventListeners();
@@ -39,86 +28,68 @@ let noResultsElement, notification;
     renderSymbols();
     updateCounts();
     
-    console.log('网站初始化完成');
-})();
-
-// 设置初始数据
-function setupInitialData() {
-    // 首先使用默认数据
-    allSymbols = getDefaultSymbols();
+    console.log('初始化完成，字符数量:', allSymbols.length);
     
-    // 提取分类
-    const uniqueCategories = new Set(allSymbols.map(symbol => symbol.category));
-    categories = ['all', ...Array.from(uniqueCategories).sort()];
-    
-    console.log('使用默认数据，字符数量:', allSymbols.length);
-    
-    // 异步加载 chars.json
-    loadCharsJSON();
+    // 异步尝试加载外部 JSON
+    setTimeout(loadExternalData, 100);
 }
 
-// 加载 chars.json 文件
-async function loadCharsJSON() {
-    try {
-        const response = await fetch('chars.json');
-        
-        if (!response.ok) {
-            console.warn('无法加载 chars.json，使用默认数据');
-            return;
-        }
-        
-        const data = await response.json();
-        
-        if (Array.isArray(data) && data.length > 0) {
-            allSymbols = data;
-            
-            // 提取分类
-            const uniqueCategories = new Set(allSymbols.map(symbol => symbol.category));
-            categories = ['all', ...Array.from(uniqueCategories).sort()];
-            
-            console.log('从 chars.json 加载了', allSymbols.length, '个字符');
-            
-            // 重新渲染
-            renderCategories();
-            renderSymbols();
-            updateCounts();
-        }
-    } catch (error) {
-        console.warn('加载 chars.json 失败:', error.message, '，继续使用默认数据');
-    }
-}
-
-// 默认字符数据（确保一定有数据）
-function getDefaultSymbols() {
-    return [
+// 加载默认数据（确保页面有内容）
+function loadDefaultData() {
+    // 简化的默认数据
+    allSymbols = [
         {"symbol": "+", "name": "加号", "category": "数学", "keywords": ["加", "加法"]},
         {"symbol": "-", "name": "减号", "category": "数学", "keywords": ["减", "减法"]},
         {"symbol": "×", "name": "乘号", "category": "数学", "keywords": ["乘", "乘法"]},
         {"symbol": "÷", "name": "除号", "category": "数学", "keywords": ["除", "除法"]},
-        {"symbol": "=", "name": "等号", "category": "数学", "keywords": ["等于", "等号"]},
-        {"symbol": "≠", "name": "不等号", "category": "数学", "keywords": ["不等于"]},
-        {"symbol": "≈", "name": "约等号", "category": "数学", "keywords": ["约等于"]},
+        {"symbol": "=", "name": "等号", "category": "数学", "keywords": ["等于"]},
         {"symbol": "α", "name": "Alpha", "category": "希腊字母", "keywords": ["阿尔法"]},
         {"symbol": "β", "name": "Beta", "category": "希腊字母", "keywords": ["贝塔"]},
-        {"symbol": "γ", "name": "Gamma", "category": "希腊字母", "keywords": ["伽马"]},
-        {"symbol": "π", "name": "Pi", "category": "数学", "keywords": ["圆周率"]},
-        {"symbol": "∑", "name": "求和符号", "category": "数学", "keywords": ["求和"]},
-        {"symbol": "∞", "name": "无穷大", "category": "数学", "keywords": ["无穷"]},
-        {"symbol": "😀", "name": "笑脸", "category": "emoji", "keywords": ["表情"]},
-        {"symbol": "😊", "name": "微笑", "category": "emoji", "keywords": ["表情"]},
-        {"symbol": "❤️", "name": "红心", "category": "emoji", "keywords": ["爱心"]},
+        {"symbol": "😀", "name": "笑脸", "category": "emoji", "keywords": ["笑脸"]},
         {"symbol": "←", "name": "左箭头", "category": "箭头", "keywords": ["箭头"]},
-        {"symbol": "→", "name": "右箭头", "category": "箭头", "keywords": ["箭头"]},
-        {"symbol": "↑", "name": "上箭头", "category": "箭头", "keywords": ["箭头"]},
-        {"symbol": "↓", "name": "下箭头", "category": "箭头", "keywords": ["箭头"]},
-        {"symbol": "$", "name": "美元", "category": "货币", "keywords": ["货币"]},
-        {"symbol": "€", "name": "欧元", "category": "货币", "keywords": ["货币"]},
-        {"symbol": "¥", "name": "人民币", "category": "货币", "keywords": ["货币"]},
-        {"symbol": "©", "name": "版权", "category": "特殊", "keywords": ["版权"]},
-        {"symbol": "®", "name": "注册商标", "category": "特殊", "keywords": ["商标"]},
-        {"symbol": "★", "name": "实心星星", "category": "几何", "keywords": ["星星"]},
-        {"symbol": "☆", "name": "空心星星", "category": "几何", "keywords": ["星星"]}
+        {"symbol": "$", "name": "美元", "category": "货币", "keywords": ["货币"]}
     ];
+    
+    // 提取分类
+    updateCategories();
+}
+
+// 更新分类列表
+function updateCategories() {
+    const uniqueCategories = new Set(allSymbols.map(symbol => symbol.category));
+    categories = ['all', ...Array.from(uniqueCategories).sort()];
+}
+
+// 异步加载外部数据
+function loadExternalData() {
+    console.log('尝试加载外部数据...');
+    
+    fetch('chars.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP错误: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('成功加载 chars.json，数据长度:', data.length);
+            
+            if (Array.isArray(data) && data.length > 0) {
+                allSymbols = data;
+                updateCategories();
+                
+                // 重新渲染
+                renderCategories();
+                renderSymbols();
+                updateCounts();
+                
+                console.log('已更新数据，字符数量:', allSymbols.length);
+            }
+        })
+        .catch(error => {
+            console.warn('加载外部数据失败，使用默认数据:', error.message);
+            // 保持使用默认数据
+        });
 }
 
 // 设置事件监听器
@@ -126,30 +97,29 @@ function setupEventListeners() {
     console.log('设置事件监听器...');
     
     // 搜索输入
+    const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', function(e) {
             searchQuery = e.target.value.toLowerCase().trim();
-            
+            const clearSearchBtn = document.getElementById('clearSearch');
             if (clearSearchBtn) {
                 clearSearchBtn.style.display = searchQuery ? 'block' : 'none';
             }
             
-            // 防抖处理
-            clearTimeout(window.searchTimeout);
-            window.searchTimeout = setTimeout(() => {
-                renderSymbols();
-                updateCounts();
-            }, 300);
+            renderSymbols();
+            updateCounts();
         });
     }
     
     // 清除搜索按钮
+    const clearSearchBtn = document.getElementById('clearSearch');
     if (clearSearchBtn) {
         clearSearchBtn.addEventListener('click', function() {
+            const searchInput = document.getElementById('searchInput');
             if (searchInput) {
                 searchInput.value = '';
                 searchQuery = '';
-                clearSearchBtn.style.display = 'none';
+                this.style.display = 'none';
                 renderSymbols();
                 updateCounts();
             }
@@ -168,6 +138,17 @@ function setupEventListeners() {
         });
     }
     
+    // 分类按钮事件（使用事件委托）
+    const categoryList = document.getElementById('categoryList');
+    if (categoryList) {
+        categoryList.addEventListener('click', function(e) {
+            const button = e.target.closest('.category-btn');
+            if (button && button.dataset.category) {
+                setActiveCategory(button.dataset.category);
+            }
+        });
+    }
+    
     // 快速链接按钮
     const quickButtons = document.querySelectorAll('.quick-btn');
     if (quickButtons.length > 0) {
@@ -181,37 +162,28 @@ function setupEventListeners() {
         });
     }
     
-    // 关于按钮
-    const showAboutBtn = document.getElementById('showAbout');
-    if (showAboutBtn) {
-        showAboutBtn.addEventListener('click', function() {
-            const aboutModal = document.getElementById('aboutModal');
-            if (aboutModal) {
-                aboutModal.style.display = 'flex';
+    // 复制按钮事件（使用事件委托）
+    const symbolsContainer = document.getElementById('symbolsContainer');
+    if (symbolsContainer) {
+        symbolsContainer.addEventListener('click', function(e) {
+            const copyBtn = e.target.closest('.copy-btn');
+            if (copyBtn && copyBtn.dataset.symbol) {
+                copySymbol(copyBtn.dataset.symbol, copyBtn);
+            }
+        });
+        
+        // 双击卡片复制
+        symbolsContainer.addEventListener('dblclick', function(e) {
+            const card = e.target.closest('.symbol-card');
+            if (card) {
+                const symbolChar = card.querySelector('.symbol-char')?.textContent;
+                const copyBtn = card.querySelector('.copy-btn');
+                if (symbolChar) {
+                    copySymbol(symbolChar, copyBtn);
+                }
             }
         });
     }
-    
-    // 模态框关闭按钮
-    const closeModalButtons = document.querySelectorAll('.close-modal');
-    if (closeModalButtons.length > 0) {
-        closeModalButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const aboutModal = document.getElementById('aboutModal');
-                if (aboutModal) {
-                    aboutModal.style.display = 'none';
-                }
-            });
-        });
-    }
-    
-    // 点击模态框外部关闭
-    window.addEventListener('click', function(e) {
-        const aboutModal = document.getElementById('aboutModal');
-        if (aboutModal && e.target === aboutModal) {
-            aboutModal.style.display = 'none';
-        }
-    });
     
     console.log('事件监听器设置完成');
 }
@@ -229,6 +201,7 @@ function setActiveCategory(category) {
     });
     
     // 更新当前分类标题
+    const currentCategoryElement = document.getElementById('currentCategory');
     if (currentCategoryElement) {
         currentCategoryElement.textContent = category === 'all' ? '所有字符' : category;
     }
@@ -239,9 +212,10 @@ function setActiveCategory(category) {
 
 // 渲染分类列表
 function renderCategories() {
+    const categoryList = document.getElementById('categoryList');
     if (!categoryList) return;
     
-    console.log('渲染分类列表...');
+    console.log('渲染分类列表，分类数量:', categories.length);
     
     // 计算每个分类的数量
     const categoryCounts = {};
@@ -267,17 +241,7 @@ function renderCategories() {
         `;
         
         categoryList.appendChild(li);
-        
-        // 添加点击事件
-        li.querySelector('.category-btn').addEventListener('click', function() {
-            const category = this.dataset.category;
-            if (category) {
-                setActiveCategory(category);
-            }
-        });
     });
-    
-    console.log('分类列表渲染完成');
 }
 
 // 过滤字符
@@ -319,13 +283,17 @@ function filterSymbols() {
 
 // 渲染字符卡片
 function renderSymbols() {
-    if (!symbolsContainer) return;
+    const symbolsContainer = document.getElementById('symbolsContainer');
+    if (!symbolsContainer) {
+        console.error('找不到 symbolsContainer 元素');
+        return;
+    }
     
     const filteredSymbols = filterSymbols();
-    
     console.log('渲染字符，数量:', filteredSymbols.length);
     
     // 更新无结果消息
+    const noResultsElement = document.getElementById('noResults');
     if (noResultsElement) {
         if (filteredSymbols.length === 0) {
             noResultsElement.style.display = 'block';
@@ -337,56 +305,46 @@ function renderSymbols() {
         }
     }
     
-    // 清空容器
+    // 渲染字符卡片
     symbolsContainer.innerHTML = '';
     
-    // 渲染字符卡片
     filteredSymbols.forEach(symbol => {
         const card = document.createElement('div');
         card.className = 'symbol-card';
         card.title = '双击复制字符';
         
         card.innerHTML = `
-            <div class="symbol-char">${symbol.symbol}</div>
-            <div class="symbol-name">${symbol.name}</div>
-            ${symbol.category !== '其他' ? `<div class="symbol-category">${symbol.category}</div>` : ''}
-            <button class="copy-btn" data-symbol="${symbol.symbol}">
+            <div class="symbol-char">${escapeHtml(symbol.symbol)}</div>
+            <div class="symbol-name">${escapeHtml(symbol.name)}</div>
+            <div class="symbol-category">${escapeHtml(symbol.category)}</div>
+            <button class="copy-btn" data-symbol="${escapeHtml(symbol.symbol)}">
                 <i class="far fa-copy"></i> 复制
             </button>
         `;
         
         symbolsContainer.appendChild(card);
-        
-        // 添加复制事件
-        const copyBtn = card.querySelector('.copy-btn');
-        if (copyBtn) {
-            copyBtn.addEventListener('click', function() {
-                const symbolChar = this.dataset.symbol;
-                if (symbolChar) {
-                    copySymbol(symbolChar, this);
-                }
-            });
-        }
-        
-        // 双击卡片复制
-        card.addEventListener('dblclick', function() {
-            const symbolChar = symbol.symbol;
-            if (symbolChar) {
-                const copyBtn = this.querySelector('.copy-btn');
-                copySymbol(symbolChar, copyBtn);
-            }
-        });
     });
+    
+    console.log('字符渲染完成');
+}
+
+// HTML 转义函数
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // 更新计数显示
 function updateCounts() {
     const filteredSymbols = filterSymbols();
     
+    const symbolCountElement = document.getElementById('symbolCount');
     if (symbolCountElement) {
         symbolCountElement.textContent = filteredSymbols.length;
     }
     
+    const categoryCountElement = document.getElementById('categoryCount');
     if (categoryCountElement) {
         categoryCountElement.textContent = filteredSymbols.length;
     }
@@ -401,6 +359,8 @@ function copySymbol(symbol, button) {
     // 创建临时文本区域
     const textArea = document.createElement('textarea');
     textArea.value = symbol;
+    textArea.style.position = 'fixed';
+    textArea.style.opacity = '0';
     document.body.appendChild(textArea);
     textArea.select();
     
@@ -420,17 +380,9 @@ function copySymbol(symbol, button) {
                     button.classList.remove('copied');
                 }, 1500);
             }
-        } else {
-            console.error('复制失败');
         }
     } catch (err) {
         console.error('复制失败:', err);
-        // 尝试使用现代 API
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(symbol).then(() => {
-                showNotification(`已复制: ${symbol}`);
-            });
-        }
     } finally {
         document.body.removeChild(textArea);
     }
@@ -438,6 +390,7 @@ function copySymbol(symbol, button) {
 
 // 显示通知
 function showNotification(message) {
+    const notification = document.getElementById('notification');
     if (!notification) return;
     
     const notificationText = notification.querySelector('span');
@@ -452,19 +405,17 @@ function showNotification(message) {
     }, 2000);
 }
 
-// 导出到全局，方便调试
-window.app = {
-    reloadData: function() {
-        loadCharsJSON();
+// 调试函数
+window.debugApp = {
+    getSymbolCount: () => allSymbols.length,
+    getCategories: () => [...categories],
+    getCurrentCategory: () => currentCategory,
+    reloadData: () => {
+        loadExternalData();
         return allSymbols.length;
     },
-    getData: function() {
+    showAllData: () => {
+        console.log('所有字符数据:', allSymbols);
         return allSymbols;
-    },
-    getCategories: function() {
-        return categories;
-    },
-    getCurrentCategory: function() {
-        return currentCategory;
     }
 };
