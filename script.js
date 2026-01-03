@@ -1,5 +1,5 @@
 // 特殊字符网站主脚本
-// 从外部 JSON 文件加载数据
+// 数据源：chars.json
 
 // 全局变量
 let allSymbols = [];
@@ -26,14 +26,6 @@ const toggleDarkModeBtn = document.getElementById('toggleDarkMode');
 const aboutModal = document.getElementById('aboutModal');
 const closeModalButtons = document.querySelectorAll('.close-modal');
 
-// 常量定义
-const SYMBOLS_JSON_PATH = 'chars.json;
-const DEFAULT_CATEGORIES = [
-    '数学', '希腊字母', '音标', '拼音', '箭头', 'emoji', 
-    '货币', '特殊', '几何', '上下标', '扑克', '国际象棋',
-    '生物', '宗教文化', '单位', '其他'
-];
-
 // 初始化函数
 document.addEventListener('DOMContentLoaded', () => {
     initApp();
@@ -42,93 +34,83 @@ document.addEventListener('DOMContentLoaded', () => {
 // 应用程序初始化
 async function initApp() {
     try {
-        await loadSymbolsFromJSON();
-        updateUI();
+        // 加载字符数据
+        await loadSymbols();
+        
+        // 初始化UI
+        renderCategories();
+        renderSymbols();
+        updateCounts();
+        
+        // 设置事件监听器
         setupEventListeners();
+        
+        // 恢复主题设置
         updateTheme();
+        
+        console.log('网站初始化完成，加载了', allSymbols.length, '个字符');
     } catch (error) {
-        console.error('应用程序初始化失败:', error);
-        showErrorMessage('无法加载字符数据。请确保 chars.json 文件存在。');
+        console.error('初始化失败:', error);
+        showErrorMessage('网站初始化失败，请刷新页面重试。');
     }
 }
 
-// 从 JSON 文件加载符号数据
-async function loadSymbolsFromJSON() {
+// 加载字符数据
+async function loadSymbols() {
     try {
-        const response = await fetch(SYMBOLS_JSON_PATH);
+        const response = await fetch('chars.json');
         
         if (!response.ok) {
-            throw new Error(`HTTP错误! 状态: ${response.status}`);
+            throw new Error(`HTTP错误: ${response.status}`);
         }
         
         allSymbols = await response.json();
         
-        // 验证数据格式
+        // 数据验证
         if (!Array.isArray(allSymbols)) {
-            throw new Error('字符数据格式错误: 应为数组格式');
+            throw new Error('数据格式错误: 应为数组');
         }
+        
+        // 确保每个字符都有必要的字段
+        allSymbols = allSymbols.map((symbol, index) => {
+            return {
+                symbol: symbol.symbol || '?',
+                name: symbol.name || `字符${index + 1}`,
+                category: symbol.category || '其他',
+                keywords: symbol.keywords || []
+            };
+        });
         
         // 提取所有分类
-        categories = [...new Set(allSymbols.map(symbol => symbol.category))];
+        const uniqueCategories = new Set(allSymbols.map(symbol => symbol.category));
+        categories = ['all', ...Array.from(uniqueCategories).sort()];
         
-        // 确保 "所有字符" 分类在最前面
-        if (!categories.includes('all')) {
-            categories.unshift('all');
-        }
-        
-        console.log(`成功加载 ${allSymbols.length} 个字符，共 ${categories.length - 1} 个分类`);
     } catch (error) {
         console.error('加载字符数据失败:', error);
         
-        // 如果 JSON 加载失败，使用内置的默认数据
-        console.warn('使用默认字符数据');
+        // 使用默认数据
         allSymbols = getDefaultSymbols();
-        categories = ['all', ...DEFAULT_CATEGORIES];
+        const uniqueCategories = new Set(allSymbols.map(symbol => symbol.category));
+        categories = ['all', ...Array.from(uniqueCategories).sort()];
+        
+        console.warn('已使用默认数据，请确保chars.json文件存在');
     }
 }
 
-// 获取默认符号数据（备用）
+// 默认字符数据（备用）
 function getDefaultSymbols() {
-    // 这是一个简化的默认数据集，实际项目中应该从 chars.json 加载完整数据
     return [
-        { symbol: "+", name: "加号", category: "数学" },
-        { symbol: "-", name: "减号", category: "数学" },
-        { symbol: "×", name: "乘号", category: "数学" },
-        { symbol: "÷", name: "除号", category: "数学" },
-        { symbol: "=", name: "等号", category: "数学" },
-        { symbol: "≠", name: "不等号", category: "数学" },
-        { symbol: "≈", name: "约等号", category: "数学" },
-        { symbol: "α", name: "Alpha", category: "希腊字母" },
-        { symbol: "β", name: "Beta", category: "希腊字母" },
-        { symbol: "γ", name: "Gamma", category: "希腊字母" },
-        { symbol: "←", name: "左箭头", category: "箭头" },
-        { symbol: "→", name: "右箭头", category: "箭头" },
-        { symbol: "↑", name: "上箭头", category: "箭头" },
-        { symbol: "↓", name: "下箭头", category: "箭头" },
-        { symbol: "😀", name: "笑脸", category: "emoji" },
-        { symbol: "😂", name: "笑到哭", category: "emoji" },
-        { symbol: "😊", name: "微笑", category: "emoji" },
-        { symbol: "$", name: "美元", category: "货币" },
-        { symbol: "€", name: "欧元", category: "货币" },
-        { symbol: "¥", name: "人民币/日元", category: "货币" },
-        { symbol: "©", name: "版权符号", category: "特殊" },
-        { symbol: "®", name: "注册商标", category: "特殊" },
-        { symbol: "™", name: "商标符号", category: "特殊" }
+        {"symbol": "+", "name": "加号", "category": "数学", "keywords": ["加", "加法", "正号", "plus"]},
+        {"symbol": "-", "name": "减号", "category": "数学", "keywords": ["减", "减法", "负号", "minus"]},
+        {"symbol": "×", "name": "乘号", "category": "数学", "keywords": ["乘", "乘法", "times"]},
+        {"symbol": "÷", "name": "除号", "category": "数学", "keywords": ["除", "除法", "divide"]},
+        {"symbol": "=", "name": "等号", "category": "数学", "keywords": ["等于", "等号", "equals"]},
+        {"symbol": "α", "name": "Alpha", "category": "希腊字母", "keywords": ["阿尔法", "希腊字母", "alpha"]},
+        {"symbol": "β", "name": "Beta", "category": "希腊字母", "keywords": ["贝塔", "希腊字母", "beta"]},
+        {"symbol": "😀", "name": "笑脸", "category": "emoji", "keywords": ["表情", "笑脸", "emoji"]},
+        {"symbol": "←", "name": "左箭头", "category": "箭头", "keywords": ["箭头", "左", "方向"]},
+        {"symbol": "$", "name": "美元", "category": "货币", "keywords": ["货币", "美元", "dollar"]}
     ];
-}
-
-// 更新 UI
-function updateUI() {
-    renderCategories();
-    renderSymbols();
-    updateCounts();
-}
-
-// 更新字符计数
-function updateCounts() {
-    const filteredSymbols = filterSymbols();
-    symbolCountElement.textContent = filteredSymbols.length;
-    categoryCountElement.textContent = filteredSymbols.length;
 }
 
 // 设置事件监听器
@@ -168,7 +150,7 @@ function setupEventListeners() {
     });
     
     showFeedbackBtn.addEventListener('click', () => {
-        showFeedbackDialog();
+        alert('感谢您的反馈！您可以通过GitHub提交问题或建议。');
     });
     
     toggleDarkModeBtn.addEventListener('click', toggleDarkMode);
@@ -200,6 +182,7 @@ function setupEventListeners() {
             searchQuery = '';
             renderSymbols();
             updateCounts();
+            clearSearchBtn.style.display = 'none';
         }
     });
 }
@@ -208,30 +191,20 @@ function setupEventListeners() {
 function handleSearch(e) {
     searchQuery = e.target.value.toLowerCase().trim();
     clearSearchBtn.style.display = searchQuery ? 'block' : 'none';
-    renderSymbols();
-    updateCounts();
-}
-
-// 显示反馈对话框
-function showFeedbackDialog() {
-    const feedbackText = `如果您发现了任何问题或有改进建议，请通过以下方式反馈：
     
-1. 字符错误或缺失
-2. 功能建议
-3. 界面改进意见
-
-您可以将反馈发送到: feedback@example.com
-
-或者直接在GitHub上提交Issue。`;
-    
-    alert(feedbackText);
+    // 防抖处理
+    clearTimeout(window.searchTimeout);
+    window.searchTimeout = setTimeout(() => {
+        renderSymbols();
+        updateCounts();
+    }, 300);
 }
 
 // 设置活动分类
 function setActiveCategory(category) {
     currentCategory = category;
     
-    // 更新UI中的活动分类按钮
+    // 更新分类按钮状态
     document.querySelectorAll('.category-btn').forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.category === category) {
@@ -239,16 +212,17 @@ function setActiveCategory(category) {
         }
     });
     
-    // 更新当前分类标题
+    // 更新标题
     currentCategoryElement.textContent = category === 'all' ? '所有字符' : category;
     
+    // 渲染字符
     renderSymbols();
     updateCounts();
 }
 
 // 渲染分类列表
 function renderCategories() {
-    // 计算每个分类的符号数量
+    // 计算每个分类的数量
     const categoryCounts = {};
     allSymbols.forEach(symbol => {
         const cat = symbol.category;
@@ -280,7 +254,7 @@ function renderCategories() {
     });
 }
 
-// 过滤符号
+// 过滤字符
 function filterSymbols() {
     let filteredSymbols = allSymbols;
     
@@ -298,7 +272,7 @@ function filterSymbols() {
                 return true;
             }
             
-            // 检查符号本身
+            // 检查符号
             if (symbol.symbol && symbol.symbol.toLowerCase().includes(searchQuery)) {
                 return true;
             }
@@ -310,11 +284,6 @@ function filterSymbols() {
                 );
             }
             
-            // 检查描述
-            if (symbol.description && symbol.description.toLowerCase().includes(searchQuery)) {
-                return true;
-            }
-            
             return false;
         });
     }
@@ -322,11 +291,11 @@ function filterSymbols() {
     return filteredSymbols;
 }
 
-// 渲染符号
+// 渲染字符卡片
 function renderSymbols() {
     const filteredSymbols = filterSymbols();
     
-    // 显示/隐藏无结果消息
+    // 更新无结果消息
     if (filteredSymbols.length === 0) {
         noResultsElement.style.display = 'block';
         symbolsContainer.style.display = 'none';
@@ -339,20 +308,16 @@ function renderSymbols() {
     // 清空容器
     symbolsContainer.innerHTML = '';
     
-    // 渲染符号卡片
+    // 渲染字符卡片
     filteredSymbols.forEach(symbol => {
         const card = document.createElement('div');
         card.className = 'symbol-card';
-        
-        // 准备描述文本
-        const description = symbol.description || '';
-        const categoryBadge = symbol.category ? `<div class="symbol-category">${symbol.category}</div>` : '';
+        card.title = '双击复制字符';
         
         card.innerHTML = `
-            ${categoryBadge}
-            <div class="symbol-char" title="点击两次可复制">${symbol.symbol}</div>
-            <div class="symbol-name">${symbol.name || '未命名字符'}</div>
-            ${description ? `<div class="symbol-desc">${description}</div>` : ''}
+            <div class="symbol-char">${symbol.symbol}</div>
+            <div class="symbol-name">${symbol.name}</div>
+            ${symbol.category !== '其他' ? `<div class="symbol-category">${symbol.category}</div>` : ''}
             <button class="copy-btn" data-symbol="${symbol.symbol}">
                 <i class="far fa-copy"></i> 复制
             </button>
@@ -360,16 +325,23 @@ function renderSymbols() {
         
         symbolsContainer.appendChild(card);
         
-        // 添加复制功能
+        // 添加复制事件
         const copyBtn = card.querySelector('.copy-btn');
         copyBtn.addEventListener('click', () => copySymbol(symbol.symbol, copyBtn));
         
-        // 双击卡片直接复制
+        // 双击卡片复制
         card.addEventListener('dblclick', () => copySymbol(symbol.symbol, copyBtn));
     });
 }
 
-// 复制符号到剪贴板
+// 更新计数显示
+function updateCounts() {
+    const filteredSymbols = filterSymbols();
+    symbolCountElement.textContent = filteredSymbols.length;
+    categoryCountElement.textContent = filteredSymbols.length;
+}
+
+// 复制字符到剪贴板
 function copySymbol(symbol, button) {
     navigator.clipboard.writeText(symbol).then(() => {
         // 显示通知
@@ -388,7 +360,7 @@ function copySymbol(symbol, button) {
         }
     }).catch(err => {
         console.error('复制失败:', err);
-        // 降级方案：使用document.execCommand
+        // 降级方案
         const textArea = document.createElement('textarea');
         textArea.value = symbol;
         document.body.appendChild(textArea);
@@ -414,11 +386,11 @@ function showNotification(message) {
 // 显示错误消息
 function showErrorMessage(message) {
     symbolsContainer.innerHTML = `
-        <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 3rem; color: #dc3545;">
-            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+        <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 3rem;">
+            <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 1rem; color: #ff6b6b;"></i>
             <h3>加载数据失败</h3>
             <p>${message}</p>
-            <button id="retryLoad" class="copy-btn" style="margin-top: 1rem; background-color: #4361ee;">
+            <button id="retryLoad" class="copy-btn" style="margin-top: 1rem;">
                 <i class="fas fa-redo"></i> 重试加载
             </button>
         </div>
@@ -429,8 +401,19 @@ function showErrorMessage(message) {
     if (retryBtn) {
         retryBtn.addEventListener('click', async () => {
             retryBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 加载中...';
-            await loadSymbolsFromJSON();
-            updateUI();
+            retryBtn.disabled = true;
+            
+            try {
+                await loadSymbols();
+                renderCategories();
+                renderSymbols();
+                updateCounts();
+            } catch (error) {
+                console.error('重试失败:', error);
+            } finally {
+                retryBtn.innerHTML = '<i class="fas fa-redo"></i> 重试加载';
+                retryBtn.disabled = false;
+            }
         });
     }
 }
@@ -444,8 +427,7 @@ function toggleDarkMode() {
     localStorage.setItem('theme', newTheme);
     
     // 更新按钮文本
-    const buttonText = newTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
-    toggleDarkModeBtn.textContent = buttonText;
+    toggleDarkModeBtn.textContent = newTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
 }
 
 // 更新主题
@@ -454,31 +436,21 @@ function updateTheme() {
     document.documentElement.setAttribute('data-theme', savedTheme);
     
     // 更新按钮文本
-    const buttonText = savedTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
-    toggleDarkModeBtn.textContent = buttonText;
+    toggleDarkModeBtn.textContent = savedTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
 }
 
-// 工具函数：防抖
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// 导出函数供测试使用（如果需要在控制台测试）
+// 导出一些实用函数供调试使用
 if (typeof window !== 'undefined') {
-    window.app = {
-        loadSymbolsFromJSON,
-        filterSymbols,
-        copySymbol,
-        setActiveCategory,
+    window.appUtils = {
         getSymbolCount: () => allSymbols.length,
-        getCategoryCount: () => categories.length
+        getCategories: () => [...categories],
+        getCurrentCategory: () => currentCategory,
+        reloadData: async () => {
+            await loadSymbols();
+            renderCategories();
+            renderSymbols();
+            updateCounts();
+            return allSymbols.length;
+        }
     };
 }
