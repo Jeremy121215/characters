@@ -27,7 +27,7 @@ const aboutModal = document.getElementById('aboutModal');
 const closeModalButtons = document.querySelectorAll('.close-modal');
 
 // 常量定义
-const SYMBOLS_JSON_PATH = 'char.json';
+const SYMBOLS_JSON_PATH = 'chars.json;
 const DEFAULT_CATEGORIES = [
     '数学', '希腊字母', '音标', '拼音', '箭头', 'emoji', 
     '货币', '特殊', '几何', '上下标', '扑克', '国际象棋',
@@ -48,7 +48,7 @@ async function initApp() {
         updateTheme();
     } catch (error) {
         console.error('应用程序初始化失败:', error);
-        showErrorMessage('无法加载字符数据。请确保 char.json 文件存在。');
+        showErrorMessage('无法加载字符数据。请确保 chars.json 文件存在。');
     }
 }
 
@@ -89,7 +89,7 @@ async function loadSymbolsFromJSON() {
 
 // 获取默认符号数据（备用）
 function getDefaultSymbols() {
-    // 这是一个简化的默认数据集，实际项目中应该从 char.json 加载完整数据
+    // 这是一个简化的默认数据集，实际项目中应该从 chars.json 加载完整数据
     return [
         { symbol: "+", name: "加号", category: "数学" },
         { symbol: "-", name: "减号", category: "数学" },
