@@ -59,7 +59,7 @@
     {"symbol": "≌", "name": "全等", "category": "数学", "keywords": ["全等", "congruent"]},
     {"symbol": "△", "name": "三角形", "category": "数学", "keywords": ["三角形", "triangle"]},
     {"symbol": "⊙", "name": "圆", "category": "数学", "keywords": ["圆", "circle"]},
-    {"symbol": "⌀", "name": "直径", "category": "数学", "keywords": ["直径", "diameter"]},
+    {"symbol": "⌀", "name": "空集", "category": "数学", "keywords": ["空集", "empty"]},
     {"symbol": "⌒", "name": "弧", "category": "数学", "keywords": ["弧", "arc"]},
     {"symbol": "°", "name": "度", "category": "数学", "keywords": ["度", "degree"]},
     {"symbol": "′", "name": "分", "category": "数学", "keywords": ["分", "minute"]},
